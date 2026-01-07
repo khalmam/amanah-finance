@@ -36,6 +36,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
 
     path('api/users/', include('users.urls')),
+    path('api/proposals/', include('proposals.urls')),
     path('api/auth/login/', TokenObtainPairView.as_view()),
 
     # Swagger
