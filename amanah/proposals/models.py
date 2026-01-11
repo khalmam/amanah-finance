@@ -28,5 +28,19 @@ class BusinessProposal(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
 
+
+    approved_by = models.ForeignKey(
+        User,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='approved_proposals'
+    )
+    approved_at = models.DateTimeField(null=True, blank=True)
+
+    is_contracted = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
     def __str__(self):
         return self.title

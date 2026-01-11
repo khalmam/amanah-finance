@@ -7,6 +7,10 @@ from .serializers import BusinessProposalSerializer
 from .permissions import IsEntrepreneur, IsInvestor, IsAdmin
 
 class ProposalCreateView(generics.CreateAPIView):
+    """
+    Submit a new Mudarabah business proposal.
+    Only entrepreneurs can access this endpoint.
+    """
     serializer_class = BusinessProposalSerializer
     permission_classes = [permissions.IsAuthenticated, IsEntrepreneur, IsAdmin]
 
@@ -17,18 +21,28 @@ class ProposalCreateView(generics.CreateAPIView):
 class ProposalListView(generics.ListAPIView):
     serializer_class = BusinessProposalSerializer
     permission_classes = [permissions.IsAuthenticated, IsInvestor, IsAdmin]
-
+    
     def get_queryset(self):
-        return BusinessProposal.objects.filter(status='pending')
+        user = self.request.user
+        if user.role == 'investor':
+            return BusinessProposal.objects.filter(status='approved')
+        if user.role == 'entrepreneur':
+            return BusinessProposal.objects.filter(entrepreneur=user)
+        return BusinessProposal.objects.all()
+    
 
 
 class ProposalApproveView(generics.UpdateAPIView):
-    queryset = BusinessProposal.objects.all()
+    queryset = BusinessProposal.objects.filter(status='pending')
     serializer_class = BusinessProposalSerializer
     permission_classes = [permissions.IsAuthenticated, IsAdmin]
 
     def perform_update(self, serializer):
-        serializer.save(status='approved')
+        serializer.save(
+            status='approved',
+            approved_by=self.request.user,
+            approved_at=timezone.now()
+        )
 
 class ProposalRejectView(generics.UpdateAPIView):
     queryset = BusinessProposal.objects.all()
