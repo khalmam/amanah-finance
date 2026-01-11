@@ -1,4 +1,35 @@
 .env
+.secrets
+
+# Virtual Environments
+djangenv/
+venv/
+.venv/
+env/
+
+
 __pycache__/
 db.sqlite3
 *.pyc
+pytest_cache/
+pytest.ini
+
+
+.DS_Store
+.idea/
+.vscode/
+coverage/
+htmlcov/
+*.egg-info/
+staticfiles/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+
+# Pytest / Testing
+.pytest_cache/
+.coverage
+htmlcov/
