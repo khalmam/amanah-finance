@@ -2,6 +2,7 @@ import pytest
 from rest_framework.test import APIClient
 from django.contrib.auth import get_user_model
 from proposals.models import BusinessProposal
+from django.utils import timezone
 
 User = get_user_model()
 
@@ -36,7 +37,6 @@ def test_only_admin_can_approve_proposal():
 
     assert response.status_code == 403
 
-from django.utils import timezone
 
 @pytest.mark.django_db
 def test_approval_sets_audit_fields():
