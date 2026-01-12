@@ -4,7 +4,19 @@ from django.shortcuts import render
 from rest_framework import generics, permissions
 from .models import BusinessProposal
 from .serializers import BusinessProposalSerializer
-from .permissions import IsEntrepreneur, IsInvestor, IsAdmin
+from .permissions import IsEntrepreneur, IsInvestor, IsAdmin, IsEntrepreneurOrAdmin
+from django.utils import timezone
+
+# class ProposalCreateView(generics.CreateAPIView):
+#     """
+#     Submit a new Mudarabah business proposal.
+#     Only entrepreneurs can access this endpoint.
+#     """
+#     serializer_class = BusinessProposalSerializer
+#     permission_classes = [permissions.IsAuthenticated, IsEntrepreneur, IsAdmin]
+
+#     def perform_create(self, serializer):
+#         serializer.save(entrepreneur=self.request.user)
 
 class ProposalCreateView(generics.CreateAPIView):
     """
@@ -12,10 +24,11 @@ class ProposalCreateView(generics.CreateAPIView):
     Only entrepreneurs can access this endpoint.
     """
     serializer_class = BusinessProposalSerializer
-    permission_classes = [permissions.IsAuthenticated, IsEntrepreneur, IsAdmin]
+    permission_classes = [IsEntrepreneurOrAdmin]
 
     def perform_create(self, serializer):
         serializer.save(entrepreneur=self.request.user)
+
 
 
 class ProposalListView(generics.ListAPIView):
