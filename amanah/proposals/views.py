@@ -1,22 +1,21 @@
 from django.shortcuts import render
 
-# Create your views here.
+
 from rest_framework import generics, permissions
 from .models import BusinessProposal
 from .serializers import BusinessProposalSerializer
-from .permissions import IsEntrepreneur, IsInvestor, IsAdmin, IsEntrepreneurOrAdmin
+from users.permissions import (
+    IsEntrepreneur,
+    IsInvestor,
+    IsEntrepreneurOrAdmin,
+)
+
+from utils.permissions import IsOwnerOrAdmin, IsInvestorOrOwnerOrAdmin
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.authentication import JWTAuthentication
+
 from django.utils import timezone
 
-# class ProposalCreateView(generics.CreateAPIView):
-#     """
-#     Submit a new Mudarabah business proposal.
-#     Only entrepreneurs can access this endpoint.
-#     """
-#     serializer_class = BusinessProposalSerializer
-#     permission_classes = [permissions.IsAuthenticated, IsEntrepreneur, IsAdmin]
-
-#     def perform_create(self, serializer):
-#         serializer.save(entrepreneur=self.request.user)
 
 class ProposalCreateView(generics.CreateAPIView):
     """
@@ -30,25 +29,36 @@ class ProposalCreateView(generics.CreateAPIView):
         serializer.save(entrepreneur=self.request.user)
 
 
+# views.py
 
 class ProposalListView(generics.ListAPIView):
     serializer_class = BusinessProposalSerializer
-    permission_classes = [permissions.IsAuthenticated, IsInvestor, IsAdmin]
-    
+    authentication_classes = [JWTAuthentication]   # 🔥 THIS WAS MISSING
+    permission_classes = [IsAuthenticated]
+
     def get_queryset(self):
         user = self.request.user
-        if user.role == 'investor':
+
+        print(f"--- DEBUG LOG ---")
+        print(f"User: {user} | Authenticated: {user.is_authenticated} | Role: {getattr(user, 'role', 'No Role')}")
+
+        if not user.is_authenticated:
+            return BusinessProposal.objects.none()
+
+        role = getattr(user, 'role', None)
+        if role == 'investor':
             return BusinessProposal.objects.filter(status='approved')
-        if user.role == 'entrepreneur':
+        if role == 'entrepreneur':
             return BusinessProposal.objects.filter(entrepreneur=user)
+
         return BusinessProposal.objects.all()
-    
+
 
 
 class ProposalApproveView(generics.UpdateAPIView):
     queryset = BusinessProposal.objects.filter(status='pending')
     serializer_class = BusinessProposalSerializer
-    permission_classes = [permissions.IsAuthenticated, IsAdmin]
+    permission_classes = [permissions.IsAuthenticated, IsOwnerOrAdmin]
 
     def perform_update(self, serializer):
         serializer.save(
@@ -60,7 +70,7 @@ class ProposalApproveView(generics.UpdateAPIView):
 class ProposalRejectView(generics.UpdateAPIView):
     queryset = BusinessProposal.objects.all()
     serializer_class = BusinessProposalSerializer
-    permission_classes = [permissions.IsAuthenticated, IsAdmin]
+    permission_classes = [permissions.IsAuthenticated, IsOwnerOrAdmin]
 
     def perform_update(self, serializer):
         serializer.save(status='rejected')
