@@ -5,6 +5,20 @@ from rest_framework import generics
 from .serializers import UserSerializer, EntrepreneurSignupSerializer, InvestorSignupSerializer
 from .models import User
 
+
+# Add this to users/views.py
+from rest_framework.views import APIView
+from rest_framework.response import Response
+
+class TestAuthView(APIView):
+    # No authentication_classes, no permission_classes - purely global
+    
+    def get(self, request):
+        return Response({
+            'user': str(request.user),
+            'authenticated': request.user.is_authenticated
+        })
+
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer

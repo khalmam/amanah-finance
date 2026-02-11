@@ -19,6 +19,7 @@ from django.db import models
 class User(AbstractUser):
     ROLE_CHOICES = [
         ('entrepreneur', 'Entrepreneur'),
+        ('moderator', 'Moderator'),
         ('investor', 'Investor'),
         ('admin', 'Admin'),
     ]

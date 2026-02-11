@@ -16,70 +16,38 @@ class IsOwnerOrAdmin(BasePermission):
             or getattr(obj, "entrepreneur", None) == request.user
         )
 
-# class IsInvestorOrOwnerOrAdmin(BasePermission):
-#     """
-#     Allows:
-#     - investors to see approved proposals
-#     - entrepreneurs to see their own proposals
-#     - admins to see all
-#     """
 
-#     def has_permission(self, request, view):
-#         return request.user.is_authenticated
-
-#     def has_object_permission(self, request, view, obj):
-#         user = request.user
-#         if user.role == 'admin' or user.is_superuser:
-#             return True
-#         if user.role == 'investor' and obj.status == 'approved':
-#             return True
-#         if user.role == 'entrepreneur' and obj.entrepreneur == user:
-#             return True
-#         return False
-
-# class IsInvestorOrOwnerOrAdmin(BasePermission):
-#     def has_permission(self, request, view):
-#         # 1. User must be logged in
-#         if not request.user.is_authenticated:
-#             return False
-        
-#         # 2. Check if the user has a valid role to even enter the list view
-#         # This ensures only admins, investors, or entrepreneurs can call this API
-#         return hasattr(request.user, 'role') and request.user.role in ['investor', 'entrepreneur', 'admin']
-
-#     def has_object_permission(self, request, view, obj):
-#         user = request.user
-#         if user.is_superuser or user.role == 'admin':
-#             return True
-#         if user.role == 'investor' and obj.status == 'approved':
-#             return True
-#         if user.role == 'entrepreneur' and obj.entrepreneur == user:
-#             return True
-#         return False
 
 
 class IsInvestorOrOwnerOrAdmin(BasePermission):
+    """
+    Authentication-level access only.
+    Role filtering MUST happen in queryset.
+    """
+
     def has_permission(self, request, view):
-        # 1. Check if user is even logged in
-        if not (request.user and request.user.is_authenticated):
-            return False
-        
-        # 2. IMPORTANT: For the LIST view, we check the role globally.
-        # Use getattr to prevent errors if the 'role' field is missing.
-        user_role = getattr(request.user, 'role', None)
-        
-        # Allow access to the view if they have one of the valid roles
-        return user_role in ['investor', 'entrepreneur', 'admin'] or request.user.is_superuser
+        # Just check authentication - nothing else!
+        return request.user.is_authenticated  # ← Fixed this line
 
     def has_object_permission(self, request, view, obj):
-        # This part handles individual items (GET /api/proposals/1/)
         user = request.user
-        user_role = getattr(user, 'role', None)
+        role = getattr(user, 'role', None)
 
-        if user.is_superuser or user_role == 'admin':
+        if user.is_superuser or role == 'admin':
             return True
-        if user_role == 'investor' and obj.status == 'approved':
+        if role == 'investor' and obj.status == 'approved':
             return True
-        if user_role == 'entrepreneur' and obj.entrepreneur == user:
+        if role == 'entrepreneur' and obj.entrepreneur == user:
             return True
         return False
+
+
+class IsModeratorOrAdmin(BasePermission):
+    """
+    Only moderators and admins can approve proposals
+    """
+    def has_permission(self, request, view):
+        return (
+            request.user.is_authenticated and 
+            (request.user.role in ['moderator', 'admin'] or request.user.is_superuser)
+        )
