@@ -1,8 +1,8 @@
 from django.shortcuts import render
 
 # Create your views here.
-from rest_framework import generics
-from .serializers import UserSerializer, EntrepreneurSignupSerializer, InvestorSignupSerializer
+from rest_framework import generics, permissions
+from .serializers import UserSerializer, EntrepreneurSignupSerializer, InvestorSignupSerializer, ModeratorSignupSerializer
 from .models import User
 
 
@@ -39,3 +39,12 @@ class InvestorSignupView(generics.CreateAPIView):
 
     def perform_create(self, serializer):
         serializer.save(role='investor')
+
+
+class ModeratorSignupView(generics.CreateAPIView):
+    """
+    Register a new moderator account.
+    Only admins can create moderator accounts for security.
+    """
+    serializer_class = ModeratorSignupSerializer
+    permission_classes = [permissions.IsAdminUser]  # Only admins can create moderators

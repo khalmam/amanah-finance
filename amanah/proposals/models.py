@@ -42,5 +42,12 @@ class BusinessProposal(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
 
+    interested_investors = models.ManyToManyField(
+        User, 
+        related_name='interested_proposals',
+        blank=True,
+        limit_choices_to={'role': 'investor'}
+    )
+    
     def __str__(self):
         return self.title
