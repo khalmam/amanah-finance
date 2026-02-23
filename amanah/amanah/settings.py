@@ -12,7 +12,11 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
-from drf_yasg import openapi
+# from drf_yasg import openapi
+
+
+
+
 
 
 
@@ -29,7 +33,7 @@ SECRET_KEY = 'django-insecure-n4z=!de#^#5bphurr%c@c)gfyvbn94jv#vlv#!@15onodnwxe#
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*'] # Only for local dev!
 
 AUTH_USER_MODEL = 'users.User'
 
@@ -44,13 +48,34 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'rest_framework.authtoken',
+    'rest_framework_simplejwt',
+    'corsheaders',
+    'core',
     'users',
     'proposals',
-    'drf_yasg',
+    "drf_spectacular",
+    # 'drf_yasg',
 ]
 
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+
+]
+
+CORS_ALLOW_HEADERS = [
+    "accept",
+    "authorization",
+    "content-type",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
+]
+
+CORS_ALLOW_ALL_ORIGINS = True 
+CORS_ALLOW_CREDENTIALS = True
+
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -133,31 +158,86 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
+
+
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
+    'DEFAULT_AUTHENTICATION_CLASSES': (  # ← Back to tuple
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
+    'DEFAULT_RENDERER_CLASSES': (
+        'rest_framework.renderers.JSONRenderer',
+    ),
+     'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',),
+
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
+
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(hours=2),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
     'AUTH_HEADER_TYPES': ('Bearer',),
+    'USER_ID_FIELD': 'id',  # ← Add this
+    'USER_ID_CLAIM': 'user_id',  # ← Add this
 }
 
-SWAGGER_SETTINGS = {
-    "SECURITY_DEFINITIONS": {
-        "Bearer": {
-            "type": "apiKey",
-            "name": "Authorization",
-            "in": "header",
-            "description": "Enter: Bearer <your_token>",
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "API",
+    "VERSION": "1.0.0",
+    "SECURITY": [{"BearerAuth": []}],
+    "COMPONENTS": {
+        "securitySchemes": {
+            "BearerAuth": {
+                "type": "apiKey",
+                "in": "header",
+                "name": "Authorization",
+                "description": "Enter: Bearer <your JWT token>",
+            }
         }
     },
-    "USE_SESSION_AUTH": False,
 }
-SWAGGER_INFO = openapi.Info(
-    title="Amanah Finance API",
-    default_version='v1',
-    description="Shariah-compliant Mudarabah financing platform",
-    contact=openapi.Contact(email="contact@amanah.finance"),
-)
+
+
+# SPECTACULAR_SETTINGS = {
+#     "TITLE": "API",
+#     "DESCRIPTION": "API documentation",
+#     "VERSION": "1.0.0",
+#     "SERVE_INCLUDE_SCHEMA": False,
+#     "SECURITY": [{"BearerAuth": []}],
+#     "COMPONENTS": {
+#         "securitySchemes": {
+#             "BearerAuth": {
+#                 "type": "http",
+#                 "scheme": "bearer",
+#                 "bearerFormat": "JWT",
+#             }
+#         }
+#     },
+# }
+
+
+# SWAGGER_SETTINGS = {
+#     "SECURITY_DEFINITIONS": {
+#         "Bearer": {
+#             "type": "apiKey",
+#             "name": "Authorization",
+#             "in": "header",
+#             "description": "Enter: Bearer <access_token>",
+#         }
+#     },
+#     "USE_SESSION_AUTH": False,
+# }
+
+
+
+# SWAGGER_INFO = openapi.Info(
+#     title="Amanah Finance API",
+#     default_version='v1',
+#     description="Shariah-compliant Mudarabah financing platform",
+#     contact=openapi.Contact(email="contact@amanah.finance"),
+# )
+
