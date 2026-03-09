@@ -37,14 +37,6 @@ const Login = () => {
     setIsLoading(true);
     setError('');
 
-//    try {
-//     const response = await api.post("/api/auth/token/", formData);
-//     console.log("Login Success!", response.data);
-//     alert("Login worked! Staying here to prevent crash.");
-//     // navigate("/dashboard"); // Comment this out temporarily
-// } catch (error) {
-//     console.error("Login failed", error);
-// }}
 
 try {
   const response = await api.post("/api/auth/token/", {
