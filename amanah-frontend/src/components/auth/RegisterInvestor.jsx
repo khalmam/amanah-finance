@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import api from '../../api/axios';
 
 const RegisterInvestor = () => {
   const [formData, setFormData] = useState({
@@ -92,52 +93,50 @@ const RegisterInvestor = () => {
     setError('');
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (!validateStep3()) return;
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    setIsLoading(true);
-    setError('');
+  if (!validateStep3()) return;
 
-    try {
-      const response = await fetch('/api/accounts/register/investor/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          username: formData.username,
-          email: formData.email,
-          first_name: formData.firstName,
-          last_name: formData.lastName,
-          password: formData.password,
-          password2: formData.password2,
-          phone: formData.phone,
-          investment_capacity: formData.investmentCapacity,
-          investment_preference: formData.investmentPreference,
-          experience: formData.experience
-        })
-      });
+  setIsLoading(true);
+  setError('');
 
-      const data = await response.json();
+  try {
+    const response = await api.post('/api/users/signup/investor/', {
+      username: formData.username,
+      email: formData.email,
+      first_name: formData.firstName,
+      last_name: formData.lastName,
+      password: formData.password,
+      password2: formData.password2,
+      phone: formData.phone,
+      investment_capacity: Number(formData.investmentCapacity),
+      investment_preference: formData.investmentPreference,
+      experience: formData.experience,
+      role: 'investor',
+    });
 
-      if (response.ok) {
-        setSuccess(true);
-        setTimeout(() => {
-          window.location.href = '/login';
-        }, 2500);
-      } else {
-        const errorMessage = data.username || data.email || data.password || data.detail || 'Registration failed. Please try again.';
-        setError(Array.isArray(errorMessage) ? errorMessage[0] : errorMessage);
-      }
-    } catch (err) {
-      setError('Network error. Please check your connection and try again.');
-      console.error('Registration error:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    // Axios: data is in response.data, no need for response.json()
+    setSuccess(true);
+    setTimeout(() => {
+      window.location.href = '/login';
+    }, 2500);
+
+  } catch (err) {
+    // Axios throws on 4xx/5xx — error response is in err.response.data
+    const data = err.response?.data;
+    const errorMessage =
+      data?.username?.[0] ||
+      data?.email?.[0] ||
+      data?.password?.[0] ||
+      data?.detail ||
+      'Registration failed. Please try again.';
+    setError(errorMessage);
+    console.error('Registration error:', err);
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   if (success) {
     return (
